@@ -3,16 +3,8 @@ package com.simbirsoft.tests;
 import com.codeborne.selenide.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.openqa.selenium.By;
 
-import java.io.File;
-import java.lang.reflect.Array;
-import java.time.Duration;
-import java.util.Arrays;
-
-import static com.codeborne.selenide.Condition.text;
-import static com.codeborne.selenide.Condition.visible;
-import static com.codeborne.selenide.ElementsCollection.texts;
+import static com.codeborne.selenide.Condition.*;
 import static com.codeborne.selenide.Selectors.*;
 import static com.codeborne.selenide.Selenide.*;
 
@@ -21,76 +13,47 @@ public class Hometask2Tests {
     @BeforeAll
     static void beforeAll() {
         Configuration.startMaximized = true;
+        Configuration.baseUrl = "https://demoqa.com";
     }
 
     @Test
     void fillFormAndSubmit() {
-        String firstName = "Alexey";
-        String lastName = "Makarov";
-        String email = "emaildoesnotexist@nodomain.com";
-        String mobilePhone = "7917624862";
-        String currentAddress = "14 Imaginary St., Nevercity, Landdoesnotexist";
-        String searchMaths = "Maths";
-        String searchComputerScience = "Computer Science";
-        String searchEnglish = "English";
 
-        open("https://demoqa.com/automation-practice-form");
-        $("input#firstName").setValue(firstName);
-        $("input#lastName").setValue(lastName);
-        $("input#userEmail").setValue(email);
-        $x("//label[@for='gender-radio-1']").click();
-        String selectedGender = $x("//input[@id='gender-radio-1']").getValue();
-        $("input#userNumber").setValue(mobilePhone);
+        open("/automation-practice-form");
+        $("input#firstName").setValue("Alexey");
+        $("input#lastName").setValue("Makarov");
+        $("input#userEmail").setValue("emaildoesnotexist@nodomain.com");
+        $("input#gender-radio-1").parent().click();
+        $("input#userNumber").setValue("7917624862");
         $("input#dateOfBirthInput").click();
-        $x("//select[@class='react-datepicker__month-select']").selectOptionByValue("4");
-        $x("//select[@class='react-datepicker__year-select']").selectOptionByValue("1992");
-        $x("//div[@class='react-datepicker__day react-datepicker__day--011']").click();
-        /*
-        В этом месте я думал, что проверить надо таким образом: фрагмент названия предмета вставить, а потом нажать на элементе из списка.
-        Благо в списке подходящих по фильтру элементов у div'ов уникальные id. Так совпало, что нужный предмет всегда шёл первым.
-        Когда по другому поводу смотрел разбор ДЗ, разузнал, что можно гораздо проще.
-        Свой старый код закомментил для истории.
-
-        $("input#subjectsInput").setValue(searchMaths);
-        $x("//div[@id='react-select-2-option-0']").click();
-        $("input#subjectsInput").setValue(searchComputerScience);
-        $x("//div[@id='react-select-2-option-0']").click();
-        $("input#subjectsInput").setValue(searchEnglish);
-        $x("//div[@id='react-select-2-option-0']").click();*/
-
-        $("input#subjectsInput").setValue(searchMaths).pressEnter();
-        $("input#subjectsInput").setValue(searchComputerScience).pressEnter();
-        $("input#subjectsInput").setValue(searchEnglish).pressEnter();
-        $x("//label[@for='hobbies-checkbox-2']").click();
-        $x("//label[@for='hobbies-checkbox-3']").click();
-        String selectedHobbies = $x("//label[@for='hobbies-checkbox-2']").getText()
-                + ", "
-                + $x("//label[@for='hobbies-checkbox-3']").getText();
-        File file = new File("src/test/java/com/simbirsoft/tests/7dBulQtN5gc.jpg");
-        $x("//input[@id='uploadPicture']").uploadFile(file);
-        $("textarea#currentAddress").setValue(currentAddress);
-        $x("//div[@id='state']").click();
-        $x("//div[@id='react-select-3-option-0']").click();
-        $x("//div[@id='city']").click();
-        $x("//div[@id='react-select-4-option-2']").click();
+        $("select.react-datepicker__month-select").selectOption("May");
+        $("select.react-datepicker__year-select").selectOption("1992");
+        $("div.react-datepicker__day--011:not(.react-datepicker__day--outside-month)").click();
+        $("input#subjectsInput").setValue("Maths").pressEnter();
+        $("input#subjectsInput").setValue("Computer Science").pressEnter();
+        $("input#subjectsInput").setValue("English").pressEnter();
+        $("#hobbiesWrapper").$(byText("Reading")).click();
+        $("#hobbiesWrapper").$(byText("Music")).click();
+        $("input#uploadPicture").uploadFromClasspath("img/7dBulQtN5gc.jpg");
+        $("textarea#currentAddress").setValue("14 Imaginary St., Nevercity, Landdoesnotexist");
+        $("div#state").click();
+        $("div#stateCity-wrapper").$(byText("NCR")).click();
+        $("div#city").click();
+        $("div#stateCity-wrapper").$(byText("Noida")).click();
         $("button#submit").click();
 
-        $x("//div[@class='modal-content']").shouldBe(visible);
+        $("div.modal-content").shouldBe(visible);
         $("div#example-modal-sizes-title-lg").shouldHave(text("Thanks for submitting the form"));
-        $x("//table[@class='table table-dark table-striped table-bordered table-hover']").shouldHave(
-                text(firstName + " " + lastName),
-                text(email),
-                text(selectedGender),
-                text(mobilePhone),
-                text("11 May,1992"), // через переменную не удалось сделать, т.к. если брать значение, там вместо запятой ещё пробел
-                        // и я не смог найти рабочий способ заменить второй пробел на запятую
-                text(searchMaths + ", " + searchComputerScience + ", " + searchEnglish),
-                text(selectedHobbies),
-                text("7dBulQtN5gc.jpg"),
-                text(currentAddress),
-                text("NCR Noida") // тоже хотел сделать String, где два значения из выпадашек склеились бы в один String
-                                  // но не нашёл такого в видео с разбором :(
-        );
+        $("div.table-responsive").$(byText("Student Name")).parent().shouldHave(text("Alexey Makarov"));
+        $("div.table-responsive").$(byText("Student Email")).parent().shouldHave(text("emaildoesnotexist@nodomain.com"));
+        $("div.table-responsive").$(byText("Gender")).parent().shouldHave(text("Male"));
+        $("div.table-responsive").$(byText("Mobile")).parent().shouldHave(text("7917624862"));
+        $("div.table-responsive").$(byText("Date of Birth")).parent().shouldHave(text("11 May,1992"));
+        $("div.table-responsive").$(byText("Subjects")).parent().shouldHave(text("Maths, Computer Science, English"));
+        $("div.table-responsive").$(byText("Hobbies")).parent().shouldHave(text("Reading, Music"));
+        $("div.table-responsive").$(byText("Picture")).parent().shouldHave(text("7dBulQtN5gc.jpg"));
+        $("div.table-responsive").$(byText("Address")).parent().shouldHave(text("14 Imaginary St., Nevercity, Landdoesnotexist"));
+        $("div.table-responsive").$(byText("State and City")).parent().shouldHave(text("NCR Noida"));
         $("button#closeLargeModal").shouldBe(visible);
     }
 }
